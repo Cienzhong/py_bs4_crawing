@@ -1,23 +1,41 @@
 # 搜索引擎爬虫（360搜索）
-# python e:\exercise\python-hello\test-searchcraw.py
+# python F:\workspace\git_python\test-searchcraw.py
 import re
 import requests
 from bs4 import BeautifulSoup
+import analyse.get_tagtext
+import analyse.get_emailaddr
 
-key = 'beautifulsoup'
-url = 'https://www.so.com/s?ie=utf-8&fr=none&src=360sou_newhome&q=' + key
+key = '洗碗机'
+url = 'https://www.so.com/s?ie=utf-8&pn=3&fr=none&src=360sou_newhome&q=' + key
 #分页 &pn=2
+
+def getdockey(url):
+    if url == '' or url == None:
+        return
+    text_arr = analyse.get_tagtext.get_text(url)
+    mailaddrs = []
+    #print('text_arr len:' + str(len(text_arr)))
+    for s in text_arr:
+        mails = analyse.get_emailaddr.get_emails(s)
+        if mails != None and len(mails) > 0:
+            mailaddrs.extend(mails)
+    for m in mailaddrs:
+        print(m)
+
+    #print('mail len:' + str(len(mailaddrs)))
 
 def bsfindlist(htmldoc):
 	if htmldoc == '' or htmldoc == None:
 		return
 	soup = BeautifulSoup(htmldoc, 'html.parser')
 	bodydoc = soup.body
-	arr_text = []
-	arr_href = []
-	arr_div = []
+	print('url:')
 	for child in bodydoc.find_all("h3", class_="res-title"):
 		print(child.a['href'])
+	print('email addr:')
+	for child in bodydoc.find_all("h3", class_="res-title"):
+		getdockey(child.a['href'])
 
 
 def _main():

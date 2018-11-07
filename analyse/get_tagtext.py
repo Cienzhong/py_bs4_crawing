@@ -1,4 +1,4 @@
-# python F:\workspace\git_python\comp-emps.py
+# 获取tag文本内容
 
 import re
 import requests
@@ -36,19 +36,28 @@ def comp_tag(htmlstr):
     text = text.strip()
     return text
 
-url = "http://www.sohu.com/a/272245079_157534"
-resp = requests.get(url)
-resp.encoding = 'utf-8'
-if resp.status_code == 200:
-    soup = BeautifulSoup(resp.text, 'html.parser')
-    arr_li = soup.body.findAll('li')
-    for i in arr_li:
-        print(comp_tag(str(i)))
-    arr_p = soup.body.findAll('p')
-    for i in arr_p:
-        print(comp_tag(str(i)))
-    '''
-    arr_a = soup.body.findAll('a')
-    for i in arr_a:
-        print(i)
-    '''
+# 重定向地址：
+# http://www.so.com/link?m=aTWIAtdGb%2FenpvqUeabutQ0jd1tclfWVxzyqW%2BuWdll%2Fhf%2FJtFOGhMydW28nwjeE8XfTQRNZNnANiypyzbtd6qw0N8vrbHXYEQKU6lo%2BeKxE%3D
+def get_text(url):
+    _list = []
+    if url == '' or url == None:
+        return _list
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        if soup.body == None or soup.meta['name'] == 'referrer':
+            equiv = soup.find('meta', attrs={"http-equiv":"refresh"})
+            reUrl = equiv['content'].split('URL=')[1].replace("'","") # 重定向url
+            resp = requests.get(reUrl)
+            if resp.status_code == 200:
+                soup = BeautifulSoup(resp.text, 'html.parser')
+        arr_text = soup.body.findAll(['li','p','a','span','b','dd','td'])
+        for i in arr_text:
+            _list.append(comp_tag(str(i)))
+        '''
+        arr_href = soup.body.findAll('a')
+        for hf in arr_href:
+            if len(hf.contents)==1:
+                _list.append(comp_tag(hf['href']))
+        '''
+    return _list
