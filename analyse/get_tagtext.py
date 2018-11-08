@@ -42,15 +42,12 @@ def get_text(url):
     _list = []
     if url == '' or url == None:
         return _list
-    resp = requests.get(url)
+    sessions = requests.session()
+    sessions.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36'
+    resp = sessions.get(url, timeout=10)
+    resp.encoding = 'utf-8'
     if resp.status_code == 200:
         soup = BeautifulSoup(resp.text, 'html.parser')
-        if soup.body == None or soup.meta['name'] == 'referrer':
-            equiv = soup.find('meta', attrs={"http-equiv":"refresh"})
-            reUrl = equiv['content'].split('URL=')[1].replace("'","") # 重定向url
-            resp = requests.get(reUrl)
-            if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, 'html.parser')
         arr_text = soup.body.findAll(['li','p','a','span','b','dd','td'])
         for i in arr_text:
             _list.append(comp_tag(str(i)))

@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import analyse.get_tagtext
 import analyse.get_emailaddr
+import time
 
 key = '洗碗机'
 url = 'https://www.so.com/s?ie=utf-8&pn=3&fr=none&src=360sou_newhome&q=' + key
@@ -14,37 +15,61 @@ def getdockey(url):
     if url == '' or url == None:
         return
     text_arr = analyse.get_tagtext.get_text(url)
+    fidtext = []
     mailaddrs = []
-    #print('text_arr len:' + str(len(text_arr)))
+    # 查找符合的段落
     for s in text_arr:
-        mails = analyse.get_emailaddr.get_emails(s)
-        if mails != None and len(mails) > 0:
-            mailaddrs.extend(mails)
-    for m in mailaddrs:
-        print(m)
+        if '@' in s:
+            fidtext.extend(s.split())
+    # 查找符合的语句
+    for m in fidtext:
+        if '@' in m:
+            mailaddrs.append(m)
+    mailsplit = []
+    for addr in mailaddrs:
+        for a in addr.split():
+            if '@' in a:
+                mailsplit.append(a)
+    addrs = []
+    for ma in mailsplit:
+        addrs.extend(analyse.get_emailaddr.find_email(ma))
+    for em in addrs:
+        print(em)
 
-    #print('mail len:' + str(len(mailaddrs)))
+# 获取目标的地址
+def gettargeturl(url):
+    reUrl = url
+    if 'so.com' in url:
+        req = requests.get(url)
+        if req.status_code == 200:
+            soup = BeautifulSoup(req.text, 'html.parser')
+            equiv = soup.find('meta', attrs={"http-equiv":"refresh"})
+            reUrl = equiv['content'].split('URL=')[1].replace("'","") # 重定向url
+
+    return reUrl
 
 def bsfindlist(htmldoc):
-	if htmldoc == '' or htmldoc == None:
-		return
-	soup = BeautifulSoup(htmldoc, 'html.parser')
-	bodydoc = soup.body
-	print('url:')
-	for child in bodydoc.find_all("h3", class_="res-title"):
-		print(child.a['href'])
-	print('email addr:')
-	for child in bodydoc.find_all("h3", class_="res-title"):
-		getdockey(child.a['href'])
-
+    if htmldoc == '' or htmldoc == None:
+        return
+    soup = BeautifulSoup(htmldoc, 'html.parser')
+    bodydoc = soup.body
+    print('url:')
+    for child in bodydoc.find_all("h3", class_="res-title"):
+        print(child.a['href'])
+    print('target url:')
+    for child in bodydoc.find_all("h3", class_="res-title"):
+        target_url = gettargeturl(child.a['href'])
+        print(target_url)
+        getdockey(target_url)
+    print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
 def _main():
-	req=requests.get(url)
-	req.encoding='utf-8'
-	if req.status_code == 200:
-		bsfindlist(req.text)
-		#print(req.text)
+    print('begin:'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+    req=requests.get(url)
+    req.encoding='utf-8'
+    if req.status_code == 200:
+        bsfindlist(req.text)
 
 if 1 > 0:
-	_main()
+    _main()
 
