@@ -34,7 +34,7 @@ if r.status_code == 200:
 		reUrl = equiv['content'].split('URL=')[1].replace("'","")
 	else:
 		print('getnow')
-'''
+
 
 s1 = 'hello world!'
 s2 = 'world'
@@ -43,3 +43,9 @@ if s2 in s1:
 else:
 	print('none')
 print(s1.find(s2))
+'''
+
+pn = 1
+while(pn<=10):
+	print(pn)
+	pn=pn+1;

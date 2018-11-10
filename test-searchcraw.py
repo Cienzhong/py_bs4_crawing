@@ -8,7 +8,7 @@ import analyse.get_emailaddr
 import time
 
 key = '洗碗机'
-url = 'https://www.so.com/s?ie=utf-8&pn=3&fr=none&src=360sou_newhome&q=' + key
+url = 'https://www.so.com/s?ie=utf-8&fr=none&src=360sou_newhome&q=' + key + '&pn='
 #分页 &pn=2
 
 def getdockey(url):
@@ -61,15 +61,17 @@ def bsfindlist(htmldoc):
         target_url = gettargeturl(child.a['href'])
         print(target_url)
         getdockey(target_url)
-    print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
-def _main():
-    print('begin:'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-    req=requests.get(url)
+def go_requests(p):
+    req=requests.get(url+str(p))
     req.encoding='utf-8'
     if req.status_code == 200:
         bsfindlist(req.text)
 
-if 1 > 0:
-    _main()
+print('begin:'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+pn = 1
+while(pn<=10):
+    go_requests(pn)
+    pn=pn+1
 
+print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
