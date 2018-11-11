@@ -42,25 +42,22 @@ def get_text(url):
     _list = []
     if url == '' or url == None:
         return _list
+    requests.adapters.DEFAULT_RETRIES = 5  # 增加重试连接次数
     sessions = requests.session()
     sessions.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36'
-    resp = sessions.get(url, timeout=10)
-    resp.encoding = 'utf-8'
-    if resp.status_code == 200:
-        # html内容有包含@字符才去解析树节点
-        #if '@' in resp.text:
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        arr_text = soup.body.findAll(['li','p','a','span','b','dd','td'])
-        connects_url = []
-        for i in arr_text:
-            _list.append(comp_tag(str(i)))
-        connects_url = soup.body.find_all(href=re.compile('about'))
-        for j in connects_url:
-            print('connect url: '+j['href'])
-        '''
-        arr_href = soup.body.findAll('a')
-        for hf in arr_href:
-            if len(hf.contents)==1:
-                _list.append(comp_tag(hf['href']))
-        '''
+    sessions.keep_alive = False # 关闭多余的连接
+    try:
+        resp = sessions.get(url, timeout=20)
+        resp.encoding = 'utf-8'
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            arr_text = soup.body.findAll(['li','p','a','span','b','dd','td'])
+            connects_url = []
+            for i in arr_text:
+                _list.append(comp_tag(str(i)))
+            connects_url = soup.body.find_all(href=re.compile('about'))
+            for j in connects_url:
+                print('connect url: '+j['href'])
+    except:
+        print('发生异常')
     return _list

@@ -59,9 +59,8 @@ def bsfindlist(htmldoc):
         print(target_url)
         getdockey(target_url)
 
-def _main():
-    print('begin:'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-    req=requests.get(url+'2')
+def go_requests(p):
+    req=requests.get(url+str(p))
     req.encoding='utf-8'
     if req.status_code == 200:
         bsfindlist(req.text)
@@ -73,6 +72,10 @@ def _main():
         bsfindlist(req.text)
     print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
-if 1 > 0:
-    _main()
+print('begin:'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+pn = 1
+while(pn<=10):
+    go_requests(pn)
+    pn=pn+1
 
+print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
