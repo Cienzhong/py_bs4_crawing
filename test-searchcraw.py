@@ -8,7 +8,7 @@ import analyse.get_emailaddr
 import time
 
 key = '洗碗机'
-url = 'https://www.so.com/s?ie=utf-8&pn=3&fr=none&src=360sou_newhome&q=' + key
+url = 'https://www.so.com/s?ie=utf-8&fr=none&src=360sou_newhome&q=' + key + '&pn='
 #分页 &pn=2
 
 def getdockey(url):
@@ -53,22 +53,25 @@ def bsfindlist(htmldoc):
         return
     soup = BeautifulSoup(htmldoc, 'html.parser')
     bodydoc = soup.body
-    print('url:')
-    for child in bodydoc.find_all("h3", class_="res-title"):
-        print(child.a['href'])
     print('target url:')
     for child in bodydoc.find_all("h3", class_="res-title"):
         target_url = gettargeturl(child.a['href'])
         print(target_url)
         getdockey(target_url)
-    print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
 def _main():
     print('begin:'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-    req=requests.get(url)
+    req=requests.get(url+'2')
     req.encoding='utf-8'
     if req.status_code == 200:
         bsfindlist(req.text)
+    req = requests.get(url + '3')
+    if req.status_code == 200:
+        bsfindlist(req.text)
+    req = requests.get(url + '4')
+    if req.status_code == 200:
+        bsfindlist(req.text)
+    print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
 if 1 > 0:
     _main()

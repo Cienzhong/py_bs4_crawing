@@ -47,10 +47,16 @@ def get_text(url):
     resp = sessions.get(url, timeout=10)
     resp.encoding = 'utf-8'
     if resp.status_code == 200:
+        # html内容有包含@字符才去解析树节点
+        #if '@' in resp.text:
         soup = BeautifulSoup(resp.text, 'html.parser')
         arr_text = soup.body.findAll(['li','p','a','span','b','dd','td'])
+        connects_url = []
         for i in arr_text:
             _list.append(comp_tag(str(i)))
+        connects_url = soup.body.find_all(href=re.compile('about'))
+        for j in connects_url:
+            print('connect url: '+j['href'])
         '''
         arr_href = soup.body.findAll('a')
         for hf in arr_href:

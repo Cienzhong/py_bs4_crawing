@@ -36,10 +36,13 @@ if r.status_code == 200:
 		print('getnow')
 '''
 
-s1 = 'hello world!'
-s2 = 'world'
-if s2 in s1:
-	print('ok')
-else:
-	print('none')
-print(s1.find(s2))
+addrs = []
+addrs.append('529781013@qq.com')
+addrs.append('550479657@qq.com')
+addrs.append('zhzhi2008@126.com')
+surl="http://mg.github.com/"
+jsondata = {
+	"url": surl,
+	"emailaddr": addrs
+}
+print(jsondata)
