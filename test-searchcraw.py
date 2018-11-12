@@ -64,12 +64,6 @@ def go_requests(p):
     req.encoding='utf-8'
     if req.status_code == 200:
         bsfindlist(req.text)
-    req = requests.get(url + '3')
-    if req.status_code == 200:
-        bsfindlist(req.text)
-    req = requests.get(url + '4')
-    if req.status_code == 200:
-        bsfindlist(req.text)
     print('end:' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
 print('begin:'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
