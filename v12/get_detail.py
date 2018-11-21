@@ -52,6 +52,71 @@ def get_connectlinks(linkstr):
                 connect_links.append(linkstr)
     return connect_links
 
+def get_req_text(url):
+    requests.adapters.DEFAULT_RETRIES = 5  # 增加重试连接次数
+    sessions = requests.session()
+    sessions.headers[
+        'User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36'
+    sessions.keep_alive = False  # 关闭多余的连接
+    try:
+        resp = sessions.get(url, timeout=TIMEOUT_REQUESTS_GET_SECOND)
+        resp.encoding = 'utf-8'
+        if resp.status_code == 200:
+            return resp.text
+        else:
+            return ""
+    except:
+        print('get_req_soup>发生了异常')
+        return ""
+
+def get_emailaddrs_by_souptext(text):
+    soup = BeautifulSoup(text, "html.parser")
+    nodes = soup.body.find_all(KEYS_HTMLTAG_ARR)
+    addrs = []
+    tag_text = ''
+    tag_strs = []
+    # 开始遍历节点
+    for n in nodes:
+        if '@' in str(n):
+            tag_strs.append(comp_tag(str(n)))  # 找到包含"@"的节点内容
+    for tag_str in tag_strs:
+        addrs.extend(analyse.get_emailaddr.find_email(tag_str))  # 匹配邮箱地址，存入预先声明好的数组
+    return addrs
+
+def get_emailaddrs_by_souphref(text):
+    soup = BeautifulSoup(text, "html.parser")
+    nodes = soup.body.find_all('a')
+    addrs = []
+    for n in nodes:
+        if 'href' not in n.attrs:
+            continue
+        if '@' in n['href']:
+            addrs.extend(analyse.get_emailaddr.find_email(n['href']))  # 匹配邮箱地址，存入预先声明好的数组
+    return addrs
+
+def get_cntlink_by_souphref(text):
+    soup = BeautifulSoup(text, "html.parser")
+    nodes = soup.body.find_all('a')
+    cntlinks = []
+    for n in nodes:
+        if 'href' not in n.attrs:
+            continue
+        if len(n['href']) > 0 and n['href'] != '#':
+            cntlinks.extend(get_connectlinks(n['href']))
+    return cntlinks
+
+# 对子链接(关于、联系、帮助)进一步爬虫
+def find_cntlinks_detail(cntlinks):
+    details = []
+    for link in cntlinks:
+        if len(cntlinks) == 0:
+            continue
+        text = get_req_text(cntlinks)
+        if text != "":
+            details.extend(get_emailaddrs_by_souptext(text))
+            details.extend(get_emailaddrs_by_souphref(text))
+    return details
+
 '''
 获取网站的body内容，请务必保证url值有效
 解析节点@邮箱地址
@@ -63,43 +128,14 @@ def get_connectlinks(linkstr):
     {"url": "http://url/3", "emails": [ "mm@gg.com", "mm1@gg.com" ]}
 ]
 '''
-def req_websitebody(url, findChild):
+def req_websitebody(url):
     details = []
-    requests.adapters.DEFAULT_RETRIES = 5  # 增加重试连接次数
-    sessions = requests.session()
-    sessions.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36'
-    sessions.keep_alive = False  # 关闭多余的连接
-    try:
-        resp = sessions.get(url, timeout=TIMEOUT_REQUESTS_GET_SECOND)
-        resp.encoding = 'utf-8'
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            nodes = soup.body.find_all(KEYS_HTMLTAG_ARR)
-            addrs = []
-            tag_text = ''
-            tag_strs = []
-            connect_links = []
-            linkstr = ''
-            #开始遍历节点
-            for n in nodes:
-                tag_text = str(n)
-                if n.name == 'a':
-                    linkstr = n['href']
-                    if '@' in linkstr:  # 找到包含"@"的链接内容
-                        addrs.extend(analyse.get_emailaddr.find_email(linkstr))  # 匹配邮箱地址，存入预先声明好的数组
-                    connect_links.extend(get_connectlinks(linkstr))  # 获取
-                if '@' in tag_text:
-                    tag_strs.append(comp_tag(tag_text))  # 找到包含"@"的节点内容
-            for tag_str in tag_strs:
-                addrs.extend(analyse.get_emailaddr.find_email(tag_str))  # 匹配邮箱地址，存入预先声明好的数组
-            details.append({
-                "url": url,
-                "emails": addrs
-            })
-            if findChild == True:
-                # 对子链接(关于、联系、帮助)进一步爬虫
-                for link in connect_links:
-                    details.extend(req_websitebody(link, False))
-    except:
-        print('发生了异常')
+    text = get_req_text(url)
+    if text == "":
+        return []
+    details.extend(get_emailaddrs_by_souptext(text))
+    details.extend(get_emailaddrs_by_souphref(text))
+    cntlinks = get_cntlink_by_souphref(text)
+    if len(cntlinks) > 0:
+        details.extend(find_cntlinks_detail(cntlinks))
     return details
